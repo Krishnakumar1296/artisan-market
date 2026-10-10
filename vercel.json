@@ -1,7 +1,7 @@
 {
   "version": 2,
-  "buildCommand": "npm install --prefix server && npm install --prefix client && npm run build --prefix client",
-  "outputDirectory": "client/dist",
+  "buildCommand": "cd .. && npm install --prefix server && npm install --prefix client && npm run build --prefix client",
+  "outputDirectory": "dist",
   "rewrites": [
     { "source": "/api/:path*",     "destination": "/api/index.js" },
     { "source": "/uploads/:path*", "destination": "/api/index.js" },
