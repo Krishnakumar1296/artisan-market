@@ -9,11 +9,12 @@ const app = express();
 const isProd = process.env.NODE_ENV === 'production';
 
 // ── CORS ───────────────────────────────────────────────────────────
-// In production the client is served by the same Express process,
-// so CORS is only needed in local dev (Vite dev server on a different port).
-if (!isProd) {
-  app.use(cors({ origin: process.env.CLIENT_URL || 'http://localhost:5173' }));
-}
+// Allow all origins in production (Vercel assigns dynamic preview URLs)
+// In local dev, restrict to the Vite dev server
+app.use(cors({
+  origin: isProd ? true : (process.env.CLIENT_URL || 'http://localhost:5173'),
+  credentials: true,
+}));
 
 app.use(express.json({ limit: '10mb' }));
 
@@ -29,15 +30,15 @@ app.use('/api/analytics', require('./routes/analytics'));
 app.use('/api/admin',     require('./routes/admin'));
 app.get('/api/health',    (req, res) => res.json({ ok: true, env: process.env.NODE_ENV }));
 
-// ── Serve React build in production ───────────────────────────────
-if (isProd) {
+// ── Serve React build (Render / local production preview) ─────────
+// On Vercel this block is never reached (Vercel serves static files itself)
+if (isProd && process.env.VERCEL !== '1') {
   const clientBuild = path.join(__dirname, '../client/dist');
   app.use(express.static(clientBuild));
-  // SPA fallback — send index.html for any non-API route
-  app.get('*', (req, res) => {
-    res.sendFile(path.join(clientBuild, 'index.html'));
-  });
-} else {
+  app.get('*', (req, res) =>
+    res.sendFile(path.join(clientBuild, 'index.html'))
+  );
+} else if (!isProd) {
   app.use((req, res) => res.status(404).json({ message: 'Not found' }));
 }
 
@@ -50,8 +51,15 @@ app.use((err, req, res, next) => {
   });
 });
 
-// ── Start ──────────────────────────────────────────────────────────
-const PORT = process.env.PORT || 5000;
-connectDB().then(() => app.listen(PORT, () =>
-  console.log(`🚀 Server running on port ${PORT} [${process.env.NODE_ENV || 'development'}]`)
-));
+// ── Export for Vercel / tests ──────────────────────────────────────
+module.exports = app;
+
+// ── Start locally (not on Vercel) ─────────────────────────────────
+if (require.main === module) {
+  const PORT = process.env.PORT || 5000;
+  connectDB().then(() =>
+    app.listen(PORT, () =>
+      console.log(`🚀 Server running on port ${PORT} [${process.env.NODE_ENV || 'development'}]`)
+    )
+  );
+}
