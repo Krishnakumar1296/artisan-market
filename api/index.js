@@ -1,23 +1,14 @@
 /**
  * Vercel Serverless Function entry point
  * All /api/* and /uploads/* requests are routed here by vercel.json
+ *
+ * Note: env vars (MONGO_URI, JWT_SECRET, ...) are provided by Vercel.
+ * dotenv is loaded inside server/server.js from server/node_modules.
  */
-const path = require('path');
-
-// Load .env when running locally via `vercel dev`
-require('dotenv').config({ path: path.join(__dirname, '../server/.env') });
-
 const connectDB = require('../server/config/db');
 const app = require('../server/server');
 
-// Cache the DB connection across warm Vercel invocations
-let dbConnected = false;
-
 module.exports = async (req, res) => {
-  if (!dbConnected) {
-    await connectDB();
-    dbConnected = true;
-  }
-  // Delegate to the Express app
+  await connectDB();
   return app(req, res);
 };
