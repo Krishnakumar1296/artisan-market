@@ -10,24 +10,35 @@ try {
   loadError = e;
 }
 
+function send(res, code, obj) {
+  res.statusCode = code;
+  res.setHeader('Content-Type', 'application/json');
+  res.end(JSON.stringify(obj));
+}
+
 module.exports = async (req, res) => {
-  const meta = { stage: null, message: null, code: null, hasMongoUri: Boolean(process.env.MONGO_URI) };
+  if (loadError) {
+    return send(res, 500, {
+      stage: 'require',
+      message: loadError.message,
+      code: loadError.code,
+      stack: (loadError.stack || '').split('\n').slice(0, 5),
+    });
+  }
   try {
-    if (loadError) {
-      meta.stage = 'require';
-      meta.message = loadError.message;
-      meta.code = loadError.code;
-      return res.status(500).json(meta);
-    }
-    meta.stage = 'connectDB';
     await connectDB();
-    meta.stage = 'app';
+  } catch (e) {
+    return send(res, 500, {
+      stage: 'connectDB',
+      name: e.name,
+      message: e.message,
+      code: e.code,
+      hasMongoUri: Boolean(process.env.MONGO_URI),
+    });
+  }
+  try {
     return app(req, res);
-  } catch (err) {
-    meta.stage = meta.stage || 'unknown';
-    meta.message = err && err.message;
-    meta.code = err && err.code;
-    meta.name = err && err.name;
-    return res.status(500).json(meta);
+  } catch (e) {
+    return send(res, 500, { stage: 'app', message: e.message, code: e.code });
   }
 };
