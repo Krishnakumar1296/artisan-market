@@ -14,7 +14,7 @@ export default function Navbar() {
   // Close menu on route change
   useEffect(() => { setOpen(false); }, [location.pathname]);
 
-  // Lock body scroll when menu open
+  // Lock body scroll when dropdown open
   useEffect(() => {
     document.body.style.overflow = open ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
@@ -73,17 +73,11 @@ export default function Navbar() {
                 🛒<span className="badge" style={{ position: 'absolute', top: -6, right: -8 }}>{count}</span>
               </Link>
             )}
-            {/* Show Login + Join free buttons on mobile when not logged in */}
-            {!user && (
-              <>
-                <Link to="/login" className="nav-mobile-login">Log in</Link>
-                <Link to="/register" className="nav-mobile-join">Join free</Link>
-              </>
-            )}
             <button
-              className="hamburger"
+              className={`hamburger ${open ? 'is-open' : ''}`}
               onClick={() => setOpen(!open)}
               aria-label="Toggle menu"
+              aria-expanded={open}
               id="nav-hamburger"
             >
               <span className={`ham-line ${open ? 'open' : ''}`} />
@@ -92,58 +86,68 @@ export default function Navbar() {
             </button>
           </div>
         </div>
+
+        {/* ── Mobile dropdown ───────────────────────── */}
+        <div className={`nav-dropdown ${open ? 'open' : ''}`} id="nav-dropdown">
+          <div className="nav-dropdown-inner">
+
+            {/* User info pill (if logged in) */}
+            {user && (
+              <div className="nav-dropdown-user">
+                <div className="nav-dropdown-avatar">
+                  {user.name?.[0]?.toUpperCase()}
+                </div>
+                <div>
+                  <div style={{ fontWeight: 700, color: '#fff', fontSize: '0.92rem' }}>{user.name}</div>
+                  <div style={{ color: 'rgba(255,255,255,0.55)', fontSize: '0.78rem', textTransform: 'capitalize' }}>{user.role}</div>
+                </div>
+              </div>
+            )}
+
+            {/* Nav links */}
+            <nav className="nav-dropdown-links">
+              <NavLink to="/shop" className="dd-link">
+                <span className="dd-icon">🛍️</span> Shop
+              </NavLink>
+              <NavLink to="/artisans" className="dd-link">
+                <span className="dd-icon">👩‍🎨</span> Makers
+              </NavLink>
+              {user?.role !== 'artisan' && user?.role !== 'admin' && (
+                <NavLink to="/cart" className="dd-link">
+                  <span className="dd-icon">🛒</span> Cart
+                  {count > 0 && <span className="badge" style={{ marginLeft: 6 }}>{count}</span>}
+                </NavLink>
+              )}
+              {user ? (
+                <>
+                  <NavLink to={home} className="dd-link">
+                    <span className="dd-icon">{user.role === 'customer' ? '📦' : '📊'}</span>
+                    {user.role === 'customer' ? 'My Orders' : 'Dashboard'}
+                  </NavLink>
+                  <div className="dd-divider" />
+                  <button
+                    className="dd-link dd-link-danger"
+                    onClick={() => { logout(); nav('/'); setOpen(false); }}
+                  >
+                    <span className="dd-icon">🚪</span> Log out
+                  </button>
+                </>
+              ) : (
+                <>
+                  <div className="dd-divider" />
+                  <div className="dd-auth-row">
+                    <Link to="/login" className="dd-btn-login">Log in</Link>
+                    <Link to="/register" className="dd-btn-join">Join free</Link>
+                  </div>
+                </>
+              )}
+            </nav>
+          </div>
+        </div>
       </header>
 
-      {/* ── Mobile drawer overlay ─────────────────── */}
+      {/* Overlay to close dropdown */}
       {open && <div className="nav-overlay" onClick={() => setOpen(false)} />}
-
-      <div className={`nav-drawer ${open ? 'open' : ''}`}>
-        <div className="nav-drawer-inner">
-          {user && (
-            <div className="nav-drawer-user">
-              <div className="nav-drawer-avatar">
-                {user.name?.[0]?.toUpperCase()}
-              </div>
-              <div>
-                <div style={{ fontWeight: 700, color: '#fff', fontSize: '0.95rem' }}>{user.name}</div>
-                <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.82rem', textTransform: 'capitalize' }}>{user.role}</div>
-              </div>
-            </div>
-          )}
-
-          <nav className="nav-drawer-links">
-            <NavLink to="/shop" className="drawer-link">🛍️ Shop</NavLink>
-            <NavLink to="/artisans" className="drawer-link">👩‍🎨 Makers</NavLink>
-            {user?.role !== 'artisan' && user?.role !== 'admin' && (
-              <NavLink to="/cart" className="drawer-link">
-                🛒 Cart {count > 0 && <span className="badge">{count}</span>}
-              </NavLink>
-            )}
-            {user ? (
-              <>
-                <NavLink to={home} className="drawer-link">
-                  {user.role === 'customer' ? '📦 My orders' : '📊 Dashboard'}
-                </NavLink>
-                <div className="drawer-divider" />
-                <button
-                  className="drawer-link drawer-link-danger"
-                  onClick={() => { logout(); nav('/'); setOpen(false); }}
-                >
-                  🚪 Log out
-                </button>
-              </>
-            ) : (
-              <>
-                <div className="drawer-divider" />
-                <NavLink to="/login" className="drawer-link">Log in</NavLink>
-                <Link to="/register" className="btn gold" style={{ marginTop: 8, textAlign: 'center', justifyContent: 'center' }}>
-                  Join free — it's quick!
-                </Link>
-              </>
-            )}
-          </nav>
-        </div>
-      </div>
     </>
   );
 }
