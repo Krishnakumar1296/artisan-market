@@ -897,7 +897,7 @@ tr:hover td { background: var(--paper-warm); }
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.45);
-  z-index: 150;
+  z-index: 90;
   backdrop-filter: blur(2px);
   animation: fadeIn 0.2s ease;
 }
@@ -1039,6 +1039,7 @@ tr:hover td { background: var(--paper-warm); }
   /* ── Navbar ──────────────────────────────────────────────────── */
   .nav-desktop { display: none; }
   .nav-mobile-right { display: flex; }
+  .nav-dropdown { display: block; }
   .nav-inner { height: 56px; padding: 0 16px; }
   .brand { font-size: 1.35rem; }
 
