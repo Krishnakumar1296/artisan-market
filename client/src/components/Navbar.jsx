@@ -73,6 +73,13 @@ export default function Navbar() {
                 🛒<span className="badge" style={{ position: 'absolute', top: -6, right: -8 }}>{count}</span>
               </Link>
             )}
+            {/* Show Login + Join free buttons on mobile when not logged in */}
+            {!user && (
+              <>
+                <Link to="/login" className="nav-mobile-login">Log in</Link>
+                <Link to="/register" className="nav-mobile-join">Join free</Link>
+              </>
+            )}
             <button
               className="hamburger"
               onClick={() => setOpen(!open)}
